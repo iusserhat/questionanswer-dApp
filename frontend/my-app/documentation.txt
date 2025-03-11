@@ -1,0 +1,226 @@
+# Soru & Cevap dApp Projesi Dokümantasyonu
+
+## İçindekiler
+
+1. [Proje Genel Bakış](#proje-genel-bakış)
+2. [Teknoloji Yığını](#teknoloji-yığını)
+3. [Akıllı Kontratlar](#akıllı-kontratlar)
+4. [Frontend Yapısı](#frontend-yapısı)
+5. [Kurulum Adımları](#kurulum-adımları)
+6. [Kullanım Kılavuzu](#kullanım-kılavuzu)
+7. [Geliştirme Süreci](#geliştirme-süreci)
+8. [Sorun Giderme](#sorun-giderme)
+
+## Proje Genel Bakış
+
+Soru & Cevap dApp, Ethereum blok zinciri üzerinde çalışan merkeziyetsiz bir soru-cevap platformudur. Bu platform, kullanıcıların sorular sormasına, diğer kullanıcıların bu soruları cevaplamasına ve cevapların SRT token kullanılarak oylanmasına olanak tanır.
+
+Proje iki ana bileşenden oluşur:
+1. **Akıllı Kontratlar**: Ethereum blok zincirinde çalışan ve veri depolama/işleme mantığını yöneten kontratlar
+2. **Frontend Uygulaması**: Kullanıcı arayüzü sağlayan React tabanlı web uygulaması
+
+## Teknoloji Yığını
+
+### Blok Zinciri Tarafı
+- **Solidity**: Akıllı kontrat geliştirme dili
+- **OpenZeppelin Kontratları**: Güvenli kontrat geliştirme için kütüphaneler
+- **Ethereum**: Hedef blok zinciri platformu
+
+### Frontend Tarafı
+- **React**: Kullanıcı arayüzü kütüphanesi
+- **TypeScript**: Tip güvenliği sağlayan JavaScript üst kümesi
+- **Ethers.js**: Ethereum ile etkileşim için JavaScript kütüphanesi
+- **MetaMask**: Cüzdan entegrasyonu
+- **Vite**: Hızlı geliştirme ve derleme aracı
+
+## Akıllı Kontratlar
+
+Projede iki akıllı kontrat kullanılmaktadır:
+
+### 1. SRTToken Kontratı
+- **Adres**: `0xF4cfBc57E554192090F6829c8BF9fC180835C995`
+- **Tür**: ERC20 Token
+- **İşlevler**:
+  - Token bakiyesi görüntüleme
+  - Token transferi
+  - Harcama izni verme
+
+### 2. QuestionAnswer Kontratı
+- **Adres**: `0xa4f84944d9d323A78325703e354E7329B032147a`
+- **Tür**: İş Mantığı Kontratı
+- **Veri Yapıları**:
+  - `Question`: Soru bilgilerini içeren yapı
+  - `Answer`: Cevap bilgilerini içeren yapı
+- **Sabitler**:
+  - `UPVOTE_FEE`: Oylama için gereken token miktarı (10 SRT)
+- **İşlevler**:
+  - `createQuestion`: Yeni soru oluşturma
+  - `createAnswer`: Soruya cevap verme
+  - `upvoteAnswer`: Cevap oylama
+  - `getQuestions`: Tüm soruları getirme
+  - `getAnswersForQuestion`: Belirli bir sorunun cevaplarını getirme
+  - `withdrawTokens`: Kontrat içindeki tokenleri çekme (sadece sahip)
+  - `withdrawEther`: Kontrat içindeki ETH'yi çekme (sadece sahip)
+
+### Kontrat İş Akışı
+1. Kullanıcılar `createQuestion` fonksiyonunu çağırarak yeni sorular oluşturabilir
+2. Diğer kullanıcılar `createAnswer` fonksiyonunu çağırarak soruları cevaplayabilir
+3. Kullanıcılar `upvoteAnswer` fonksiyonunu çağırarak cevapları oylayabilir
+   - Her oylama 10 SRT token gerektirir
+   - Oylama ücretinin %80'i cevap yazarına gider
+   - Kalan %20 kontrat içinde kalır
+
+## Frontend Yapısı
+
+### Dosya Yapısı
+```
+frontend/my-app/
+├── src/
+│   ├── App.tsx           # Ana uygulama bileşeni
+│   ├── App.css           # Stil dosyası
+│   ├── constant.js       # Kontrat adresleri ve ABI'ler
+│   ├── main.tsx          # Uygulama giriş noktası
+│   └── assets/           # Statik dosyalar
+├── public/               # Genel erişilebilir dosyalar
+├── package.json          # Bağımlılıklar ve betikler
+└── README.md             # Proje dokümantasyonu
+```
+
+### Bileşenler ve İşlevler
+
+#### App.tsx
+Ana uygulama bileşeni aşağıdaki işlevleri içerir:
+
+1. **Durum Yönetimi**:
+   - Kullanıcı hesabı
+   - Kontrat örnekleri
+   - Sorular ve cevaplar
+   - Token bakiyesi
+   - Yükleme durumu
+
+2. **Ethereum Bağlantısı**:
+   - MetaMask algılama ve bağlantı
+   - Kontrat örneklerini oluşturma
+   - Hesap değişikliklerini dinleme
+
+3. **Veri İşlemleri**:
+   - Soruları yükleme
+   - Cevapları yükleme
+   - Soru oluşturma
+   - Cevap oluşturma
+   - Cevap oylama
+
+4. **Kullanıcı Arayüzü**:
+   - Cüzdan bağlantısı
+   - Soru formu
+   - Soru listesi
+   - Cevap formu
+   - Cevap listesi ve oylama
+
+#### constant.js
+Kontrat adresleri ve ABI'leri (Application Binary Interface) içerir:
+- `SRTTOKEN_ADDRESS`: SRT token kontrat adresi
+- `QUESTIONANSWER_ADDRESS`: QuestionAnswer kontrat adresi
+- `SRTTOKEN_ABI`: SRT token kontrat ABI'si
+- `QUESTIONANSWER_ABI`: QuestionAnswer kontrat ABI'si
+
+## Kurulum Adımları
+
+### Ön Koşullar
+- Node.js (v14 veya üzeri)
+- npm veya yarn
+- MetaMask tarayıcı eklentisi
+- Ethereum test ağında (Sepolia, Goerli vb.) ETH ve SRT token
+
+### Adım 1: Projeyi Klonlama
+```bash
+git clone <repo-url>
+cd frontend/my-app
+```
+
+### Adım 2: Bağımlılıkları Yükleme
+```bash
+npm install
+```
+
+### Adım 3: Geliştirme Sunucusunu Başlatma
+```bash
+npm run dev
+```
+
+### Adım 4: Tarayıcıda Açma
+Tarayıcınızda `http://localhost:5173` adresine gidin.
+
+## Kullanım Kılavuzu
+
+### 1. Cüzdan Bağlantısı
+1. Uygulamayı açın
+2. "Cüzdana Bağlan" düğmesine tıklayın
+3. MetaMask açılır penceresinde bağlantıyı onaylayın
+4. Bağlantı başarılı olduğunda, hesap adresi ve token bakiyesi görüntülenecektir
+
+### 2. Soru Sorma
+1. "Yeni Soru Sor" bölümüne sorunuzu yazın
+2. "Soru Sor" düğmesine tıklayın
+3. MetaMask'ta işlemi onaylayın
+4. İşlem tamamlandığında, sorunuz listeye eklenecektir
+
+### 3. Soruları Görüntüleme
+Tüm sorular "Sorular" bölümünde listelenecektir. Her soru için:
+- Soru numarası
+- Soru içeriği
+- Soru sahibi adresi
+- Oluşturulma zamanı
+- Cevap sayısı
+
+### 4. Cevap Verme
+1. Cevaplamak istediğiniz sorunun altındaki metin alanına cevabınızı yazın
+2. "Cevapla" düğmesine tıklayın
+3. MetaMask'ta işlemi onaylayın
+4. İşlem tamamlandığında, cevabınız sorunun altında görüntülenecektir
+
+### 5. Cevap Oylama
+1. Beğendiğiniz cevabın yanındaki "Oyla" düğmesine tıklayın
+2. MetaMask'ta token harcama izni işlemini onaylayın
+3. Ardından oylama işlemini onaylayın
+4. İşlem tamamlandığında, cevabın oy sayısı artacaktır
+
+## Geliştirme Süreci
+
+### 1. Akıllı Kontrat Geliştirme
+1. Solidity ile kontratları yazma
+2. Yerel ortamda test etme
+3. Test ağına dağıtma
+
+### 2. Frontend Geliştirme
+1. React projesi oluşturma
+2. Ethers.js ile kontrat entegrasyonu
+3. Kullanıcı arayüzü bileşenlerini oluşturma
+4. MetaMask entegrasyonu
+5. Stil ve düzen iyileştirmeleri
+
+### 3. Test ve Hata Ayıklama
+1. Kontrat fonksiyonlarını test etme
+2. Kullanıcı arayüzü etkileşimlerini test etme
+3. Hata durumlarını ele alma
+
+## Sorun Giderme
+
+### MetaMask Bağlantı Sorunları
+- MetaMask'ın yüklü ve oturum açılmış olduğundan emin olun
+- Doğru ağa (kontratların dağıtıldığı ağ) bağlı olduğunuzdan emin olun
+- Tarayıcıyı yenileyin ve tekrar bağlanmayı deneyin
+
+### İşlem Hataları
+- Yeterli ETH bakiyeniz olduğundan emin olun (gas ücretleri için)
+- Oylama için yeterli SRT token bakiyeniz olduğundan emin olun
+- Konsol hatalarını kontrol edin ve hata mesajlarına göre hareket edin
+
+### Veri Yükleme Sorunları
+- Ağ bağlantınızı kontrol edin
+- Tarayıcıyı yenileyin
+- MetaMask'ın doğru ağa bağlı olduğundan emin olun
+
+---
+
+Bu dokümantasyon, Soru & Cevap dApp projesinin tüm yönlerini kapsamaktadır. Herhangi bir sorunuz veya geri bildiriminiz varsa, lütfen iletişime geçmekten çekinmeyin. 
