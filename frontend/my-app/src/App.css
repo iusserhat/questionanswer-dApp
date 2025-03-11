@@ -441,7 +441,8 @@ textarea::placeholder {
 
 .answer-form textarea {
   min-height: 80px;
-  background-color: white;
+ background-color: #ffffff;
+  color: var(--text-color);
 }
 
 /* Hata mesajı */
